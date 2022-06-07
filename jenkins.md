@@ -1,4 +1,4 @@
-﻿#### 指定某个stage阶段标记为跳过的方法
+﻿﻿#### 指定某个stage阶段标记为跳过的方法
 
 ##### 方式一（声明化pipeline）
 
@@ -242,3 +242,70 @@ steps{
 参考文档
 
 [https://www.52wiki.cn/project-14/doc-614/]()
+
+#### agent用法
+
+##### 定义在pipeline顶层，用来设置执行节点
+
+any：可以在任意可用的 agent上执行pipeline
+
+```
+agent any
+```
+
+none：pipeline将不分配全局agent，每个 stage分配自己的agent
+
+```
+agent none
+```
+
+label：指定运行节点agent的 Label
+
+```
+agent(label "slave_node")
+```
+
+node：自定义运行节点配置
+
+```
+agent{
+  node{
+    label "slave_node"
+	customWorkspace "workspace"
+   }
+}
+```
+
+docker：使用给定的容器执行流水线。
+
+```
+agent{
+	docker{
+   		image '镜像名'
+   		args ‘-v /etc:/etc’
+   	}
+}
+```
+
+dockerfile：使用源码库中包含的Dockerfile构建的容器来执行Pipeline；若要使用此项，必须从`Pipeline from SCM`加载
+
+```
+agent{dockerfile true}  ###Dockerfile 在源码根目录
+```
+
+```
+agent{dockerfile {dir 'otherpath'}}   ###用dir指定dockerfile路径
+```
+
+使用additionalBuildArgs选项传递参数给docker build
+
+```
+agent{
+	dockerfile{
+		additionalBuildArgs '--build-arg a=b'
+	}
+}
+```
+
+
+
