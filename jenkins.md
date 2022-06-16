@@ -1,4 +1,4 @@
-﻿﻿#### 指定某个stage阶段标记为跳过的方法
+﻿﻿﻿#### 指定某个stage阶段标记为跳过的方法
 
 ##### 方式一（声明化pipeline）
 
@@ -149,7 +149,25 @@ source "hello.sh"
 """
 ```
 
-在一个jenkins pipeline中触发其他jenkins job，得到执行状态
+#### 在一个jenkins pipeline中触发其他jenkins job
+
+##### 一些参数在两个pipeline中传递
+
+```
+stage('sybervisor'){
+    steps{
+        script{
+            def job_status=build job: '需要触发的job名字', propagate: false, wait: true, parameters: [string(name:'job的参数1', value:'值'), string(name:'job的参数2', value:'值')]
+            println job_status.getProjectName()
+            println job_status.getNumber()
+            println job_status.getBuildVaribles()
+            println job_status.buildVariables.变量名
+        }
+    }
+}
+```
+
+##### 执行状态
 
 ```
 stage('sybervisor'){
@@ -164,6 +182,9 @@ stage('sybervisor'){
     }
 }
 ```
+
+`还有更多方法可参考`
+`https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html`
 
 #### 并行stage
 
