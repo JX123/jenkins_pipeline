@@ -1,6 +1,6 @@
-﻿﻿﻿#### 指定某个stage阶段标记为跳过的方法
+﻿﻿﻿﻿#### 指定某个stage阶段标记为跳过的方法
 
-##### 方式一（声明化pipeline）
+##### 方式一（声明式pipeline）
 
 ```jenkins pipeline
 when {
@@ -42,7 +42,7 @@ when {
 ```
 
 如果碰到报错：java.lang.NoSuchMethodError:No such DSL method 'when' found among steps,可以使用方法二，具体原因不太清楚
-##### 方法二（脚本化pipeline）
+##### 方法二（脚本式pipeline）
 导入工具类：import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 ```
@@ -127,9 +127,8 @@ script{
         sh_status1="${sh(script:'cmd',returnStdout:true)}"
     }
     sh_status2=sh(script:'cmd',returnStdout:true).trim()
-    sh """#!/bin/bash
-    echo $sh_status1
-    echo $sh_status2
+    println $sh_status1
+    println $sh_status2
     """
 }
 ```
@@ -149,6 +148,10 @@ source "hello.sh"
 """
 ```
 
+注意：在使用sh时，最好是简短的cmd命令，或直接调用shell文件，因为直接写大段的shell脚本在pipeline里，可能会遇到变量问题：
+
+变量属于shell的变量，需要加\进行转义，eg:\\${a};如果取得是pipeline的env中变量，则不需要转义，直接${a}即可
+
 #### 在一个jenkins pipeline中触发其他jenkins job
 
 ##### 一些参数在两个pipeline中传递
@@ -161,10 +164,33 @@ stage('sybervisor'){
             println job_status.getProjectName()
             println job_status.getNumber()
             println job_status.getBuildVaribles()
-            println job_status.buildVariables.变量名
+            println job_status.buildVariables.var_name
         }
     }
 }
+```
+
+getBuildVaribles()，buildVariables.变量名
+
+这两个方法在使用时，得到的变量一定是以env环境变量方式定义才会被读取到
+
+```
+script {
+    env.number = '2'
+    env.var_name = "R001.0.0.${number}"
+    env.build_status=currentBuild.currentResult   #这个方法可以得到stage的构建状态，返回成功或者失败；跟.result的区别：成功返回SUCCESS,result方法成功时无返回值
+}
+```
+
+得到的结果是
+
+```
+Scheduling project:需要触发的job名字
+Starting building:需要触发的job名字 #1
+需要触发的job名字
+1
+{number=2,var_name=R001.0.0.2,build_status=SUCCESS}
+R001.0.0.2
 ```
 
 ##### 执行状态
@@ -183,7 +209,7 @@ stage('sybervisor'){
 }
 ```
 
-`还有更多方法可参考`
+`还有更多方法可参考`:
 `https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html`
 
 #### 并行stage
@@ -221,7 +247,7 @@ script {
     actionTest = loadList.collectEntries{
         name ->
                 ["${name}": {
-                    node("${name}") {
+                    node("${name}") {  #注意这里是脚本式pipeline，注意不能使用post来获取stage的值
                             stage("${name} stage") {
                                 script{
                                     sh """#!/bin/bash
@@ -327,6 +353,76 @@ agent{
 	}
 }
 ```
+
+#### pipeline 获取状态的接口
+
+前缀：http://{jenkins网址}/{job_name}
+
+##### 方式一
+
+`/api/xml?pretty=true`
+
+`/api/json?pretty=true`
+
+`/api/python?pretty=true`
+
+`/{job_num}/api/....`
+
+
+
+##### 方式二
+
+`/wfapi/runs`
+
+`/wfapi/runs?fullStages=true  #可以详细到stageFlowNodes节点,但只能显示最新十条数据`
+
+`/{job_num}/wfapi`
+
+
+
+返回的json结构（因项目而异）
+
+以`/wfapi/runs?fullStages=true`为例
+
+- json以数组形式显示[]
+
+  - 每次构建 为数组中的一个字典结构{}
+
+    字典结构：_links{self},   id，name，**status**,  startTimeMillis,  endTimeMillis,   durationMillis,  pauseDuratuinMillis,   queueDurationMillis，stages
+
+    - stages以数组形式显示[]
+
+      - 每个stage 为数组的一个字典结构{}
+
+        字典结构：_links{self},   id，name，execNode,   **status**,  startTimeMillis,  endTimeMillis,   durationMillis,  pauseDuratuinMillis,   stageFlowNodes
+
+        - stageFlowNodes以数组形式显示[]
+          - 每条命令 为数组的一个字典结构{}
+          - 字典结构：_links{self,  log,  console},   id，name，execNode,   **status**,  startTimeMillis,  durationMillis,  pauseDuratuinMillis，  parentNodes
+
+**status**：SUCCESS/FAILED/NOT_EXECUTED/IN_PROCESS/UNSTABLE
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
