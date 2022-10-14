@@ -1,6 +1,6 @@
-﻿﻿﻿﻿#### 指定某个stage阶段标记为跳过的方法
+#### 一.指定某个stage阶段标记为跳过的方法
 
-##### 方式一（声明式pipeline）
+##### 1.1 方式一（声明式pipeline）
 
 ```jenkins pipeline
 when {
@@ -25,7 +25,7 @@ stage("stage1"){
 
 ```
 when {
-    allof {   ###and关系
+    allof {   ###and关系（我用着是不好使）
         branch 'master';
         environment name: 'DEPLOY_TO', value: 'production'
     }
@@ -42,7 +42,7 @@ when {
 ```
 
 如果碰到报错：java.lang.NoSuchMethodError:No such DSL method 'when' found among steps,可以使用方法二，具体原因不太清楚
-##### 方法二（脚本式pipeline）
+##### 1.2 方法二（脚本式pipeline）
 导入工具类：import org.jenkinsci.plugins.pipeline.modeldefinition.Utils
 
 ```
@@ -61,9 +61,9 @@ node(){
 
 注意：使用此种方法，请取消选中Use Groovy Sandbox复选框。
 
-#### jenkins pipeline环境变量
+#### 二.jenkins pipeline环境变量
 
-##### 获取
+##### 1.1 获取
 
 方法一：展示所有默认环境变量，https:IP/env-vars.html
 方法二：查看当前stage的所有环境变量，在pipeline中使用sh 'printenv | sort' 查看
@@ -71,7 +71,7 @@ node(){
 方法四：sh "echo ${env.BUILD_NUMBER}"
 方法五：sh "echo $BUILD_NUMBER"
 
-##### 赋值
+##### 1.2 赋值
 
 方法一：
 
@@ -97,7 +97,7 @@ withEnv(["CHECK_STATUS=0"]){
 }
 ```
 
-##### 覆盖
+##### 1.3 覆盖
 
 environment{}只能覆盖用environment{}赋值的变量
 env.VAR='' 只能覆盖env.VAR='' 赋值的变量
@@ -117,9 +117,9 @@ script{
 ...
 ```
 
-#### sh的使用
+#### 三.sh的使用
 
-##### 方法一
+##### 1.1 方法一
 
 ```
 script{
@@ -133,13 +133,13 @@ script{
 }
 ```
 
-##### 方法二
+##### 1.2 方法二
 
 ```
 sh 'echo nihao'
 ```
 
-##### 方法三
+##### 1.3 方法三
 
 ```
 sh """#!/bin/bash 
@@ -152,9 +152,9 @@ source "hello.sh"
 
 变量属于shell的变量，需要加\进行转义，eg:\\${a};如果取得是pipeline的env中变量，则不需要转义，直接${a}即可
 
-#### 在一个jenkins pipeline中触发其他jenkins job
+#### 四.在一个jenkins pipeline中触发其他jenkins job
 
-##### 一些参数在两个pipeline中传递
+##### 1.1 一些参数在两个pipeline中传递
 
 ```
 stage('sybervisor'){
@@ -178,7 +178,7 @@ getBuildVaribles()，buildVariables.变量名
 script {
     env.number = '2'
     env.var_name = "R001.0.0.${number}"
-    env.build_status=currentBuild.currentResult   #这个方法可以得到stage的构建状态，返回成功或者失败；跟.result的区别：成功返回SUCCESS,result方法成功时无返回值
+    env.build_status=currentBuild.currentResult   #这个方法可以得到stage的构建状态，返回成功或者失败；跟currentBuild.result的区别：result值可修改，currentResult不可修改,因为在代码正常执行完成时，currentResult总会返回SUCCESS,但实际运行结果是失败的（失败原因能用来catchError或者catch捕获了），这个时候我们就要手动将结果修改成FAILURE,所以用result比较合适
 }
 ```
 
@@ -212,9 +212,9 @@ stage('sybervisor'){
 `还有更多方法可参考`:
 `https://javadoc.jenkins.io/plugin/workflow-support/org/jenkinsci/plugins/workflow/support/steps/build/RunWrapper.html`
 
-#### 并行stage
+#### 五.并行stage
 
-##### 方法一
+##### 1.1 方法一
 ```
 pipeline {
     agent {label 'test'}
@@ -240,7 +240,7 @@ pipeline {
 
 
 
-##### 方法二
+##### 1.2 方法二
 
 ```
 script {
@@ -265,7 +265,7 @@ script {
 
 `脚本式pipeline，可以使用grovvy语法`
 
-#### option的使用
+#### 六.option的使用
 
 ```
 options{
@@ -290,7 +290,7 @@ steps{
 
 [https://www.52wiki.cn/project-14/doc-614/]()
 
-#### agent用法
+#### 七.agent用法
 
 ##### 定义在pipeline顶层，用来设置执行节点
 
@@ -353,12 +353,33 @@ agent{
 	}
 }
 ```
+#### 八.pipeline 获取当前任务构建人
+全局变量中默认不支持获取当前构建人，想要得到构建人信息，需要安装插件build-user-vars-plugin.hpi
+```
+# 下载插件的源码
+wget https://github.com/jenkinsci/build-user-vars-plugin/archive/build-user-vars-plugin-1.5.zip
 
-#### pipeline 获取状态的接口
+# 进入到解压后的插件目录中, 执行mvn打包命令
+mvn clean package
+
+# 完成后，在target目录中会生成一个build-user-vars-plugin.hpi文件
+# 将.hpi结尾的文件，jenkins上手动上传插件即可
+
+#Pipeline Examples
+node {
+  wrap([$class: 'BuildUser']) {
+    def user = env.BUILD_USER_ID
+  }
+}
+
+${currentBuild.durationString}".split("and counting")[0]  //获取任务持续时间
+```
+
+#### 九.pipeline 获取状态的接口
 
 前缀：http://{jenkins网址}/{job_name}
 
-##### 方式一
+##### 1.1 方式一
 
 `/api/xml?pretty=true`
 
@@ -370,7 +391,7 @@ agent{
 
 
 
-##### 方式二
+##### 1.2 方式二
 
 `/wfapi/runs`
 

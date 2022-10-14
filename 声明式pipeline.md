@@ -24,11 +24,11 @@ https://www.jenkins.io/doc/book/pipeline/
 
 Jenkinsfile有2种方式，第一种是可以直接在web配置中进行编写，这样只适合临时项目调试或简短的内容；
 
-![image-20220906133916557](C:\Users\jiangxin\AppData\Roaming\Typora\typora-user-images\image-20220906133916557.png)
+![image-20220909103606579](D:\jenkins_pipeline\jenkins_pipeline\声明式pipeline.assets\image-20220909103606579.png)
 
 第二种是在远程仓库上进行管理，这里配置远程仓库地址，让job每次执行的时候拉取这个项目，然后执行其中的某个文件。
 
-![image-20220906133932735](C:\Users\jiangxin\AppData\Roaming\Typora\typora-user-images\image-20220906133932735.png)
+![image-20220909103636649](D:\jenkins_pipeline\jenkins_pipeline\声明式pipeline.assets\image-20220909103636649.png)
 
 ##### 语法
 
@@ -87,7 +87,7 @@ pipeline{
 备注：stage内部可以嵌套stages，内部可单独制定运行的agent
 ```
 
-5.steps:步骤,为每个阶段的最小执行单元,被stage包裹
+5.steps:步骤,为每个阶段的最小执行单元,被stage包裹，一个stage只能有一个steps，并且必须有steps
 
 ```
 作用域：被stage包裹，作用在stage内部，每个作用域只能使用一次
@@ -281,7 +281,7 @@ stage('Run Tests') {
 
 **script命令：**
 
-在声明式的pipeline中默认无法使用脚本语法，但是pipeline提供了一个脚本环境入口：script{},通过使用script来包裹脚本语句，即可使用脚本语法
+在声明式的pipeline中默认无法使用脚本语法，但是pipeline提供了一个脚本环境入口：script{},通过使用script来包裹脚本语句，即可使用脚本语法。
 
 ```pipeline
 steps {
@@ -292,19 +292,6 @@ steps {
         echo "oooo"
         }
   	}
-}
-```
-
-**异常处理命令：**
-
-```pipeline
-script{
-    try {
-        sh 'exit 1'
-        }
-    catch (exc) {
-        echo 'Something failed'
-        }
 }
 ```
 
@@ -326,19 +313,7 @@ build job: 'Test', parameters: [string(name: 'Name', value: param)], wait:true
 
 
 
-###### 脚本式语法
 
-node可以嵌套stage，也可以被stage嵌套
-
-```
-node {
-    dir('/home/share/node/falcon') {
-        stage("git") {
-            sh "git fetch origin"
-            sh "git checkout -f origin/master"
-        }
-}
-```
 
 
 
